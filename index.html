@@ -80,6 +80,10 @@ textarea{width:100%;min-height:70px;border:1.5px solid var(--linha);border-radiu
 .caixa-design{border:1.5px dashed var(--linha);border-radius:var(--raio);padding:12px;background:var(--cartao)}
 .aviso-design{font-size:.85rem;color:var(--suave);margin:8px 0 0}
 
+/* Caixa "pedido bem específico" (link para formulário) */
+.caixa-especifico{margin-top:4px;font-size:.92rem;color:var(--suave)}
+.caixa-especifico a{color:var(--ciano);font-weight:600}
+
 /* Resumo e botão do WhatsApp */
 .resumo{border-top:1px solid var(--linha);margin-top:18px;padding-top:14px}
 .valor{font-size:1.8rem;font-weight:800;letter-spacing:-.02em}
@@ -142,6 +146,13 @@ textarea{width:100%;min-height:70px;border:1.5px solid var(--linha);border-radiu
           <textarea id="observacoes" placeholder="Ex.: prazo, cores da marca, detalhes do pedido"></textarea>
         </div>
 
+        <!-- Pedido bem específico: link para formulário (some se o link estiver vazio) -->
+        <p class="caixa-especifico" id="caixaEspecifico">
+          Quer algo bem específico, que não está nas opções?
+          <a id="linkFormulario" href="#" target="_blank" rel="noopener">Preencha este formulário</a>
+          e depois nos avise no WhatsApp.
+        </p>
+
         <!-- Valor e botão -->
         <div class="resumo">
           <div class="valor" id="valorEstimado"></div>
@@ -155,8 +166,11 @@ textarea{width:100%;min-height:70px;border:1.5px solid var(--linha);border-radiu
 
 <script>
 /* ============ 1. CONFIGURAÇÕES DA GRÁFICA (troque pelos dados reais) ============ */
-var NUMERO_WHATSAPP = "5585987412966"; // DDI 55 + DDD + número, só números
+var NUMERO_WHATSAPP = "5585900000000"; // DDI 55 + DDD + número, só números
 var NOME_DA_GRAFICA = "Gráfica Exemplo";
+/* Link do formulário (Google Forms, por exemplo) para pedidos bem específicos.
+   Cole o link entre as aspas. Se deixar vazio "", o aviso some do site. */
+var LINK_FORMULARIO = "https://forms.google.com";
 
 /* ============ 2. IMAGENS DE EXEMPLO ============
    Cria imagens simples de mentira. Quando tiver fotos reais,
@@ -283,6 +297,9 @@ function abrirProduto(posicao){
   posicaoQuantidade = 0;
   designEscolhido = "cliente";
   pegar("observacoes").value = "";
+  /* Mostra o aviso do formulário só se existir link */
+  pegar("caixaEspecifico").style.display = LINK_FORMULARIO ? "" : "none";
+  pegar("linkFormulario").href = LINK_FORMULARIO || "#";
   pegar("tituloProduto").textContent = produtoAtual.nome;
   pegar("descricaoProduto").textContent = produtoAtual.descricao;
   desenharGaleria();
