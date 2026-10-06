@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Gráfica | Peça online</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;800&display=swap">
+<style>
+/* ============ 1. CORES E MEDIDAS (mude aqui para trocar o visual) ============ */
+:root{
+  --papel:#f5f7fa; --cartao:#ffffff; --tinta:#14213d; --suave:#5b6578; --linha:#d9dfe8;
+  --ciano:#0098d1; --magenta:#e0237a; --amarelo:#ffc800; --raio:12px;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){--papel:#0e131c;--cartao:#171e2b;--tinta:#eef2f8;--suave:#9aa6ba;--linha:#2a3345}
+}
+:root[data-theme="dark"]{--papel:#0e131c;--cartao:#171e2b;--tinta:#eef2f8;--suave:#9aa6ba;--linha:#2a3345}
+
+/* ============ 2. BASE ============ */
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--papel);color:var(--tinta);font-family:"Bricolage Grotesque",system-ui,sans-serif;line-height:1.5}
+button,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--ciano);outline-offset:2px}
+.conteudo{max-width:1040px;margin:0 auto;padding:0 20px}
+
+/* ============ 3. TOPO ============ */
+.topo{border-bottom:1px solid var(--linha);background:var(--cartao)}
+.topo .conteudo{display:flex;align-items:center;justify-content:space-between;padding-top:14px;padding-bottom:14px}
+.logo{font-weight:800;font-size:1.35rem;letter-spacing:-.02em}
+.marcas{display:flex;gap:6px}
+.marcas i{width:14px;height:14px;border-radius:50%;display:block}
+.marcas i:nth-child(1){background:var(--ciano)}.marcas i:nth-child(2){background:var(--magenta)}
+.marcas i:nth-child(3){background:var(--amarelo)}.marcas i:nth-child(4){background:var(--tinta)}
+
+/* ============ 4. CHAMADA INICIAL ============ */
+.chamada{padding:48px 0 28px}
+.chamada h1{font-size:clamp(2rem,6vw,3.4rem);line-height:1.05;letter-spacing:-.03em;font-weight:800;margin:0 0 12px;max-width:16ch}
+.chamada p{color:var(--suave);max-width:46ch;margin:0}
+
+/* ============ 5. LISTA DE PRODUTOS ============ */
+.produtos{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:18px;padding-bottom:56px}
+.produto{background:var(--cartao);border:1px solid var(--linha);border-radius:var(--raio);overflow:hidden;text-align:left;padding:0;cursor:pointer;display:flex;flex-direction:column}
+.produto:hover{border-color:var(--magenta)}
+.produto img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block}
+.produto .texto{padding:14px 16px 16px}
+.produto h2{margin:0 0 4px;font-size:1.15rem}
+.produto p{margin:0;color:var(--suave);font-size:.92rem}
+.produto .a-partir{margin-top:10px;font-weight:600;font-size:.92rem}
+
+/* ============ 6. JANELA DO PRODUTO (abre ao clicar) ============ */
+.fundo{position:fixed;inset:0;background:rgba(10,14,22,.6);display:none;z-index:10;overflow-y:auto}
+.fundo.aberto{display:block}
+.janela{background:var(--papel);max-width:920px;margin:20px auto;border-radius:var(--raio);padding:20px;position:relative}
+.fechar{position:absolute;top:12px;right:12px;width:40px;height:40px;border-radius:50%;border:1px solid var(--linha);background:var(--cartao);cursor:pointer;font-size:1.3rem;line-height:1}
+.janela-grade{display:grid;grid-template-columns:1fr 1fr;gap:28px}
+@media (max-width:760px){.janela-grade{grid-template-columns:1fr}}
+
+/* Galeria de imagens */
+.imagem-grande{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:var(--raio);display:block;border:1px solid var(--linha)}
+.miniaturas{display:flex;gap:8px;margin-top:10px}
+.miniaturas button{padding:0;border:2px solid transparent;border-radius:8px;overflow:hidden;cursor:pointer;width:64px;background:none}
+.miniaturas button.ativa{border-color:var(--magenta)}
+.miniaturas img{width:100%;display:block;aspect-ratio:1;object-fit:cover}
+
+/* Textos e opções */
+.janela h3{font-size:1.6rem;margin:4px 40px 6px 0;letter-spacing:-.02em}
+.descricao{color:var(--suave);margin:0 0 18px}
+.grupo{margin-bottom:16px}
+.grupo>strong{display:block;margin-bottom:6px;font-size:.95rem}
+.fichas{display:flex;flex-wrap:wrap;gap:8px}
+.ficha{display:inline-flex;align-items:center;gap:8px;border:1.5px solid var(--linha);background:var(--cartao);border-radius:999px;padding:7px 14px;cursor:pointer;font-size:.92rem}
+.ficha.escolhida{border-color:var(--tinta);background:var(--tinta);color:var(--papel)}
+.amostra{width:16px;height:16px;border-radius:50%;border:1px solid rgba(128,128,128,.6);display:inline-block}
+textarea{width:100%;min-height:70px;border:1.5px solid var(--linha);border-radius:10px;padding:10px;background:var(--cartao);resize:vertical}
+
+/* Design: cliente envia ou gráfica faz */
+.caixa-design{border:1.5px dashed var(--linha);border-radius:var(--raio);padding:12px;background:var(--cartao)}
+.aviso-design{font-size:.85rem;color:var(--suave);margin:8px 0 0}
+
+/* Resumo e botão do WhatsApp */
+.resumo{border-top:1px solid var(--linha);margin-top:18px;padding-top:14px}
+.valor{font-size:1.8rem;font-weight:800;letter-spacing:-.02em}
+.valor-obs{font-size:.85rem;color:var(--suave);margin:2px 0 12px}
+.botao-zap{width:100%;border:0;border-radius:999px;padding:14px;background:#1fa855;color:#fff;font-weight:600;font-size:1.05rem;cursor:pointer}
+.botao-zap:hover{background:#188a46}
+
+/* ============ 7. RODAPÉ ============ */
+.rodape{border-top:1px solid var(--linha);padding:20px 0;color:var(--suave);font-size:.85rem}
+</style>
+</head>
+<body>
+
+<!-- ============ TOPO DO SITE ============ -->
+<header class="topo">
+  <div class="conteudo">
+    <span class="logo">Gráfica Exemplo</span>
+    <span class="marcas" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+  </div>
+</header>
+
+<main class="conteudo">
+  <!-- ============ CHAMADA INICIAL ============ -->
+  <section class="chamada">
+    <h1>Escolha, monte e peça pelo WhatsApp.</h1>
+    <p>Veja os produtos, escolha tamanho, material e acabamento, e receba o valor estimado antes de falar com a gente.</p>
+  </section>
+
+  <!-- ============ LISTA DE PRODUTOS (preenchida pelo JavaScript) ============ -->
+  <section class="produtos" id="listaProdutos" aria-label="Produtos"></section>
+</main>
+
+<footer class="rodape"><div class="conteudo">Valores estimados. O valor final é confirmado pela gráfica no WhatsApp.</div></footer>
+
+<!-- ============ JANELA DO PRODUTO ============ -->
+<div class="fundo" id="fundo" role="dialog" aria-modal="true" aria-labelledby="tituloProduto">
+  <div class="janela">
+    <button class="fechar" id="botaoFechar" aria-label="Fechar">×</button>
+    <div class="janela-grade">
+      <!-- Lado esquerdo: imagens -->
+      <div>
+        <img class="imagem-grande" id="imagemGrande" alt="">
+        <div class="miniaturas" id="miniaturas"></div>
+      </div>
+      <!-- Lado direito: textos e opções -->
+      <div>
+        <h3 id="tituloProduto"></h3>
+        <p class="descricao" id="descricaoProduto"></p>
+        <div id="areaOpcoes"></div>
+
+        <!-- Escolha do design -->
+        <div class="grupo caixa-design">
+          <strong>Quem faz o design?</strong>
+          <div class="fichas" id="fichasDesign"></div>
+          <p class="aviso-design" id="avisoDesign"></p>
+        </div>
+
+        <div class="grupo" style="margin-top:16px">
+          <strong>Observações (opcional)</strong>
+          <textarea id="observacoes" placeholder="Ex.: prazo, cores da marca, detalhes do pedido"></textarea>
+        </div>
+
+        <!-- Valor e botão -->
+        <div class="resumo">
+          <div class="valor" id="valorEstimado"></div>
+          <p class="valor-obs" id="valorObs"></p>
+          <button class="botao-zap" id="botaoZap">Finalizar pelo WhatsApp</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============ 1. CONFIGURAÇÕES DA GRÁFICA (troque pelos dados reais) ============ */
+var NUMERO_WHATSAPP = "5585900000000"; // DDI 55 + DDD + número, só números
+var NOME_DA_GRAFICA = "Gráfica Exemplo";
+
+/* ============ 2. IMAGENS DE EXEMPLO ============
+   Cria imagens simples de mentira. Quando tiver fotos reais,
+   troque cada item da lista "imagens" pelo endereço da foto. */
+function criarImagem(corA, corB, texto){
+  var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300">'
+    + '<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="'+corA+'"/><stop offset="1" stop-color="'+corB+'"/></linearGradient></defs>'
+    + '<rect width="400" height="300" fill="url(#g)"/>'
+    + '<circle cx="320" cy="70" r="46" fill="rgba(255,255,255,.25)"/>'
+    + '<rect x="40" y="170" width="200" height="14" rx="7" fill="rgba(255,255,255,.55)"/>'
+    + '<rect x="40" y="198" width="140" height="10" rx="5" fill="rgba(255,255,255,.35)"/>'
+    + '<text x="40" y="130" font-family="sans-serif" font-size="30" font-weight="700" fill="#fff">'+texto+'</text></svg>';
+  return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
+}
+
+/* ============ 3. PRODUTOS E OPÇÕES (edite aqui depois de falar com o dono) ============
+   precoBase = preço de 1 unidade. Cada opção pode somar um "extra" por unidade.
+   Total estimado = (precoBase + extras) x quantidade.
+   Se um item tiver "cor", aparece uma bolinha de cor ao lado do nome. */
+var produtos = [
+  {
+    nome: "Cartão de visita",
+    descricao: "Cartões com impressão nítida e corte reto. Ideais para divulgar seu nome e contato.",
+    precoBase: 0.40,
+    imagens: [
+      criarImagem("#0098d1","#14213d","Cartão frente"), criarImagem("#e0237a","#7a1245","Cartão verso"),
+      criarImagem("#ffc800","#e08a00","Cartão kraft"), criarImagem("#14213d","#3b4a6b","Cartão preto")
+    ],
+    quantidades: [100, 250, 500, 1000],
+    opcoes: [
+      { nome:"Tamanho", itens:[ {nome:"9 x 5 cm"}, {nome:"8,5 x 5,5 cm", extra:0.05}, {nome:"5 x 5 cm (quadrado)", extra:0.10} ] },
+      { nome:"Papel", itens:[ {nome:"Couchê 300g", cor:"#ffffff"}, {nome:"Kraft", cor:"#b08a5b", extra:0.10}, {nome:"Preto", cor:"#222222", extra:0.25} ] },
+      { nome:"Impressão", itens:[ {nome:"Só frente"}, {nome:"Frente e verso", extra:0.10} ] },
+      { nome:"Acabamento", itens:[ {nome:"Sem acabamento"}, {nome:"Laminação fosca", extra:0.12}, {nome:"Verniz localizado", extra:0.15} ] }
+    ]
+  },
+  {
+    nome: "Panfleto",
+    descricao: "Panfletos para divulgar promoções, eventos e serviços. Impressão colorida de boa qualidade.",
+    precoBase: 0.30,
+    imagens: [
+      criarImagem("#e0237a","#ff7a5c","Panfleto A5"), criarImagem("#0098d1","#00d1b8","Panfleto A6"),
+      criarImagem("#ffc800","#ff8a00","Promoção"), criarImagem("#14213d","#0098d1","Evento"), criarImagem("#7a3cff","#e0237a","Frente e verso")
+    ],
+    quantidades: [500, 1000, 2500, 5000],
+    opcoes: [
+      { nome:"Tamanho", itens:[ {nome:"A6 (10 x 15 cm)"}, {nome:"A5 (15 x 21 cm)", extra:0.12}, {nome:"A4 (21 x 30 cm)", extra:0.35} ] },
+      { nome:"Papel", itens:[ {nome:"Couchê 90g"}, {nome:"Couchê 115g", extra:0.05}, {nome:"Offset 75g", extra:-0.03} ] },
+      { nome:"Impressão", itens:[ {nome:"Só frente"}, {nome:"Frente e verso", extra:0.10} ] },
+      { nome:"Cores", itens:[ {nome:"Colorido"}, {nome:"Preto e branco", extra:-0.10} ] }
+    ]
+  },
+  {
+    nome: "Banner em lona",
+    descricao: "Banners resistentes para fachada, eventos e promoções. Acompanha acabamento para pendurar.",
+    precoBase: 70,
+    imagens: [
+      criarImagem("#0098d1","#14213d","Banner fachada"), criarImagem("#e0237a","#ffc800","Banner evento"),
+      criarImagem("#14213d","#e0237a","Banner vertical")
+    ],
+    quantidades: [1, 2, 5, 10],
+    opcoes: [
+      { nome:"Tamanho", itens:[ {nome:"60 x 90 cm"}, {nome:"80 x 120 cm", extra:40}, {nome:"100 x 150 cm", extra:90}, {nome:"200 x 100 cm", extra:130} ] },
+      { nome:"Material", itens:[ {nome:"Lona 340g"}, {nome:"Lona 440g", extra:25}, {nome:"Tecido", extra:45} ] },
+      { nome:"Acabamento", itens:[ {nome:"Bainha e ilhós"}, {nome:"Com varão e cordinha", extra:18} ] }
+    ]
+  },
+  {
+    nome: "Adesivos",
+    descricao: "Adesivos para embalagens, produtos e divulgação. Resistentes e com corte no formato escolhido.",
+    precoBase: 0.80,
+    imagens: [
+      criarImagem("#ffc800","#e0237a","Adesivo redondo"), criarImagem("#00d1b8","#0098d1","Adesivo quadrado"),
+      criarImagem("#e0237a","#7a3cff","Recorte especial"), criarImagem("#c9ced6","#8a93a3","Vinil prata")
+    ],
+    quantidades: [50, 100, 250, 500],
+    opcoes: [
+      { nome:"Formato", itens:[ {nome:"Redondo"}, {nome:"Quadrado"}, {nome:"Retangular"}, {nome:"Recorte especial", extra:0.50} ] },
+      { nome:"Tamanho", itens:[ {nome:"3 cm"}, {nome:"5 cm", extra:0.40}, {nome:"8 cm", extra:1.00} ] },
+      { nome:"Material", itens:[ {nome:"Vinil branco", cor:"#ffffff"}, {nome:"Vinil transparente", cor:"#dff3fb", extra:0.30}, {nome:"Vinil prata", cor:"#c0c4cc", extra:0.60}, {nome:"Papel couchê", cor:"#f4efe6", extra:-0.20} ] },
+      { nome:"Acabamento", itens:[ {nome:"Brilho"}, {nome:"Fosco", extra:0.15}, {nome:"Verniz", extra:0.20} ] }
+    ]
+  }
+];
+
+/* ============ 4. OPÇÕES DE DESIGN (iguais para todos os produtos) ============ */
+var opcoesDesign = [
+  { id:"cliente", nome:"Eu envio a arte pronta",   aviso:"Você manda o arquivo pelo WhatsApp depois de finalizar o pedido." },
+  { id:"grafica", nome:"A gráfica faz o design",   aviso:"O valor do design não está incluso e será combinado no WhatsApp, pois depende da complexidade." }
+];
+
+/* ============ 5. GUARDA O QUE O CLIENTE ESCOLHEU ============ */
+var produtoAtual = null;   // produto aberto na janela
+var escolhas = {};         // ex.: { "Tamanho": 0, "Papel": 1 } (posição do item escolhido)
+var posicaoQuantidade = 0; // posição da quantidade escolhida
+var designEscolhido = "cliente";
+
+/* ============ 6. FUNÇÕES AUXILIARES ============ */
+function dinheiro(valor){
+  return valor.toLocaleString("pt-BR", { style:"currency", currency:"BRL" });
+}
+function pegar(id){ return document.getElementById(id); }
+
+/* ============ 7. DESENHA A LISTA DE PRODUTOS NA PÁGINA ============ */
+function desenharLista(){
+  var lista = pegar("listaProdutos");
+  lista.innerHTML = "";
+  produtos.forEach(function(p, posicao){
+    var botao = document.createElement("button");
+    botao.className = "produto";
+    botao.innerHTML = '<img src="'+p.imagens[0]+'" alt="">'
+      + '<div class="texto"><h2>'+p.nome+'</h2><p>'+p.descricao+'</p>'
+      + '<div class="a-partir">A partir de '+dinheiro(p.precoBase * p.quantidades[0])+'</div></div>';
+    botao.addEventListener("click", function(){ abrirProduto(posicao); });
+    lista.appendChild(botao);
+  });
+}
+
+/* ============ 8. ABRE A JANELA DE UM PRODUTO ============ */
+function abrirProduto(posicao){
+  produtoAtual = produtos[posicao];
+  escolhas = {};
+  produtoAtual.opcoes.forEach(function(o){ escolhas[o.nome] = 0; });
+  posicaoQuantidade = 0;
+  designEscolhido = "cliente";
+  pegar("observacoes").value = "";
+  pegar("tituloProduto").textContent = produtoAtual.nome;
+  pegar("descricaoProduto").textContent = produtoAtual.descricao;
+  desenharGaleria();
+  desenharOpcoes();
+  desenharDesign();
+  atualizarValor();
+  pegar("fundo").classList.add("aberto");
+  document.body.style.overflow = "hidden";
+  pegar("botaoFechar").focus();
+}
+function fecharProduto(){
+  pegar("fundo").classList.remove("aberto");
+  document.body.style.overflow = "";
+}
+
+/* ============ 9. GALERIA: imagem grande + miniaturas ============ */
+function desenharGaleria(){
+  var area = pegar("miniaturas");
+  area.innerHTML = "";
+  function mostrar(indice){
+    pegar("imagemGrande").src = produtoAtual.imagens[indice];
+    pegar("imagemGrande").alt = produtoAtual.nome + " - foto " + (indice + 1);
+    Array.prototype.forEach.call(area.children, function(b, i){ b.classList.toggle("ativa", i === indice); });
+  }
+  produtoAtual.imagens.forEach(function(src, i){
+    var b = document.createElement("button");
+    b.innerHTML = '<img src="'+src+'" alt="Ver foto '+(i+1)+'">';
+    b.addEventListener("click", function(){ mostrar(i); });
+    area.appendChild(b);
+  });
+  mostrar(0);
+}
+
+/* ============ 10. OPÇÕES (tamanho, material, cor... e quantidade) ============ */
+function criarFicha(texto, escolhida, cor, aoClicar){
+  var f = document.createElement("button");
+  f.type = "button";
+  f.className = "ficha" + (escolhida ? " escolhida" : "");
+  f.setAttribute("aria-pressed", escolhida);
+  f.innerHTML = (cor ? '<span class="amostra" style="background:'+cor+'"></span>' : "") + texto;
+  f.addEventListener("click", aoClicar);
+  return f;
+}
+function desenharOpcoes(){
+  var area = pegar("areaOpcoes");
+  area.innerHTML = "";
+  produtoAtual.opcoes.forEach(function(opcao){
+    var grupo = document.createElement("div");
+    grupo.className = "grupo";
+    grupo.innerHTML = "<strong>"+opcao.nome+"</strong>";
+    var fichas = document.createElement("div");
+    fichas.className = "fichas";
+    opcao.itens.forEach(function(item, i){
+      fichas.appendChild(criarFicha(item.nome, escolhas[opcao.nome] === i, item.cor, function(){
+        escolhas[opcao.nome] = i; desenharOpcoes(); atualizarValor();
+      }));
+    });
+    grupo.appendChild(fichas);
+    area.appendChild(grupo);
+  });
+  /* Quantidade */
+  var grupoQtd = document.createElement("div");
+  grupoQtd.className = "grupo";
+  grupoQtd.innerHTML = "<strong>Quantidade</strong>";
+  var fichasQtd = document.createElement("div");
+  fichasQtd.className = "fichas";
+  produtoAtual.quantidades.forEach(function(q, i){
+    fichasQtd.appendChild(criarFicha(q + " un.", posicaoQuantidade === i, null, function(){
+      posicaoQuantidade = i; desenharOpcoes(); atualizarValor();
+    }));
+  });
+  grupoQtd.appendChild(fichasQtd);
+  area.appendChild(grupoQtd);
+}
+
+/* ============ 11. ESCOLHA DO DESIGN ============ */
+function desenharDesign(){
+  var area = pegar("fichasDesign");
+  area.innerHTML = "";
+  opcoesDesign.forEach(function(d){
+    area.appendChild(criarFicha(d.nome, designEscolhido === d.id, null, function(){
+      designEscolhido = d.id; desenharDesign(); atualizarValor();
+    }));
+  });
+  var atual = opcoesDesign.filter(function(d){ return d.id === designEscolhido; })[0];
+  pegar("avisoDesign").textContent = atual.aviso;
+}
+
+/* ============ 12. CALCULA O VALOR ESTIMADO ============ */
+function calcularValor(){
+  var porUnidade = produtoAtual.precoBase;
+  produtoAtual.opcoes.forEach(function(o){
+    porUnidade += o.itens[escolhas[o.nome]].extra || 0;
+  });
+  var quantidade = produtoAtual.quantidades[posicaoQuantidade];
+  return { porUnidade: porUnidade, quantidade: quantidade, total: Math.max(porUnidade, 0) * quantidade };
+}
+function atualizarValor(){
+  var v = calcularValor();
+  pegar("valorEstimado").textContent = dinheiro(v.total);
+  pegar("valorObs").textContent = "Valor estimado (" + dinheiro(v.porUnidade) + " por unidade)"
+    + (designEscolhido === "grafica" ? " + design a combinar" : "");
+}
+
+/* ============ 13. MONTA A MENSAGEM E ABRE O WHATSAPP ============ */
+function finalizarNoWhatsApp(){
+  var v = calcularValor();
+  var linhas = ["Olá, " + NOME_DA_GRAFICA + "! Quero fazer um pedido pelo site:", "", "*Produto:* " + produtoAtual.nome];
+  produtoAtual.opcoes.forEach(function(o){
+    linhas.push("*" + o.nome + ":* " + o.itens[escolhas[o.nome]].nome);
+  });
+  linhas.push("*Quantidade:* " + v.quantidade + " un.");
+  linhas.push("*Design:* " + (designEscolhido === "cliente" ? "Vou enviar a arte pronta" : "Quero que a gráfica faça o design"));
+  linhas.push("*Valor estimado:* " + dinheiro(v.total) + (designEscolhido === "grafica" ? " + design a combinar" : ""));
+  var obs = pegar("observacoes").value.trim();
+  if (obs) linhas.push("*Observações:* " + obs);
+  var endereco = "https://wa.me/" + NUMERO_WHATSAPP + "?text=" + encodeURIComponent(linhas.join("\n"));
+  window.open(endereco, "_blank", "noopener");
+}
+
+/* ============ 14. LIGA OS BOTÕES ============ */
+pegar("botaoFechar").addEventListener("click", fecharProduto);
+pegar("botaoZap").addEventListener("click", finalizarNoWhatsApp);
+pegar("fundo").addEventListener("click", function(e){ if (e.target === pegar("fundo")) fecharProduto(); });
+document.addEventListener("keydown", function(e){ if (e.key === "Escape") fecharProduto(); });
+
+/* ============ 15. INICIO ============ */
+desenharLista();
+</script>
+</body>
+</html>
